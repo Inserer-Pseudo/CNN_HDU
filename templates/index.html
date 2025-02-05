@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pierre-Feuille-Ciseau</title>
+  <script>
+    function startCountdown() {
+      let countdown = 3;
+      document.getElementById("countdown").innerText = countdown;
+      let interval = setInterval(() => {
+        countdown--;
+        document.getElementById("countdown").innerText = countdown;
+        if (countdown <= 0) {
+          clearInterval(interval);
+          captureImage();
+        }
+      }, 1000);
+    }
+
+    function captureImage() {
+      fetch('/capture', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        if(data.error){
+          alert("Erreur : " + data.error);
+        } else {
+          document.getElementById("result-left").innerText = "Joueur Gauche : " + data.left_gesture;
+          document.getElementById("result-right").innerText = "Joueur Droit : " + data.right_gesture;
+          document.getElementById("winner").innerText = "Gagnant : " + data.winner;
+        }
+      })
+      .catch(error => console.error('Erreur:', error));
+    }
+
+    function uploadImage(event) {
+      event.preventDefault();
+      let formData = new FormData(document.getElementById("uploadForm"));
+      fetch('/upload', { method: 'POST', body: formData })
+      .then(response => response.json())
+      .then(data => {
+        if(data.error){
+          alert("Erreur : " + data.error);
+        } else {
+          document.getElementById("result-left").innerText = "Joueur Gauche : " + data.left_gesture;
+          document.getElementById("result-right").innerText = "Joueur Droit : " + data.right_gesture;
+          document.getElementById("winner").innerText = "Gagnant : " + data.winner;
+        }
+      })
+      .catch(error => console.error('Erreur:', error));
+    }
+  </script>
+</head>
+<body>
+  <h1>Pierre-Feuille-Ciseau</h1>
+
+  <h2>Flux Vidéo</h2>
+  <img src="{{ url_for('video_feed') }}" width="640" height="480">
+  <p id="countdown"></p>
+  <button onclick="startCountdown()">Capturer (3s)</button>
+
+  <h2>Uploader une Image</h2>
+  <form id="uploadForm" onsubmit="uploadImage(event)" enctype="multipart/form-data">
+    <input type="file" name="file" accept="image/*">
+    <button type="submit">Uploader</button>
+  </form>
+
+  <h2>Résultat</h2>
+  <p id="result-left"></p>
+  <p id="result-right"></p>
+  <p id="winner"></p>
+</body>
+</html>
+
