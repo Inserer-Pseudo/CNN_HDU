@@ -4,6 +4,7 @@ from flask import Flask, render_template, Response, request, jsonify, redirect, 
 import os
 from werkzeug.utils import secure_filename
 from tensorflow.keras.models import load_model
+import tensorflow as tf
 
 app = Flask(__name__)
 
@@ -21,33 +22,22 @@ camera = cv2.VideoCapture(0)
 if not camera.isOpened():
     print("[WARN] La caméra n'est pas accessible.")
 
-def process_image(img):
-    """Applique le filtrage des tons chairs et prépare l'image pour le modèle."""
-    """ img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower_skin = np.array([0, 20, 70], dtype=np.uint8)
-    upper_skin = np.array([20, 255, 255], dtype=np.uint8)
-    mask = cv2.inRange(img_hsv, lower_skin, upper_skin)
-    img_skin = cv2.bitwise_and(img, img, mask=mask)
-
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        largest_contour = max(contours, key=cv2.contourArea)
-        x, y, w_box, h_box = cv2.boundingRect(largest_contour)
-        cropped = img_skin[y:y+h_box, x:x+w_box]
-    else:
-        cropped = img_skin
-
-    resized = cv2.resize(cropped, (150, 150)) """
-    resized = cv2.resize(img, (150, 150))
-
-    # Filename
-    filename = 'savedImage.jpg'
-
-    # Using cv2.imwrite() method
-    # Saving the image
-    cv2.imwrite(filename, resized)
+def process_image(img, filename):
+    """prépare l'image pour le modèle."""
+    #resized = cv2.resize(img, (150, 150))
     
-    return resized.astype(np.float32) / 255.0
+    # Sauvegarde de l'image redimensionnée
+    #cv2.imwrite(filename, resized)
+
+    # Make image color values to be float.
+    resized = tf.cast(img, tf.float32)
+    # Make image color values to be in [0..1] range.
+    resized = resized / 255.
+    # Make sure that image has a right size
+    resized = tf.image.resize(resized, [150, 150])
+    
+    #return resized.astype(np.float32) / 255.0
+    return resized
 
 def predict_gesture(img):
     """Prédit le geste basé sur l'image traitée."""
@@ -100,9 +90,12 @@ def capture():
     height, width, _ = frame.shape
     mid = width // 2
     img_left, img_right = frame[:, :mid], frame[:, mid:]
+    
+    left_filename = 'savedImage_left.jpg'
+    right_filename = 'savedImage_right.jpg'
 
-    left_gesture = predict_gesture(process_image(img_left))
-    right_gesture = predict_gesture(process_image(img_right))
+    left_gesture = predict_gesture(process_image(img_left, left_filename))
+    right_gesture = predict_gesture(process_image(img_right, right_filename))
     winner = determine_winner(left_gesture, right_gesture)
 
     return jsonify({'left_gesture': left_gesture, 'right_gesture': right_gesture, 'winner': winner})
@@ -125,9 +118,12 @@ def upload():
         height, width, _ = img.shape
         mid = width // 2
         img_left, img_right = img[:, :mid], img[:, mid:]
+        
+        left_filename = 'savedImage_left.jpg'
+        right_filename = 'savedImage_right.jpg'
 
-        left_gesture = predict_gesture(process_image(img_left))
-        right_gesture = predict_gesture(process_image(img_right))
+        left_gesture = predict_gesture(process_image(img_left, left_filename))
+        right_gesture = predict_gesture(process_image(img_right, right_filename))
         winner = determine_winner(left_gesture, right_gesture)
 
         os.remove(filepath)
@@ -136,4 +132,3 @@ def upload():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
