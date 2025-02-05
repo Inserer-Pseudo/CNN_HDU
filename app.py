@@ -23,7 +23,7 @@ if not camera.isOpened():
 
 def process_image(img):
     """Applique le filtrage des tons chairs et prépare l'image pour le modèle."""
-    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    """ img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     lower_skin = np.array([0, 20, 70], dtype=np.uint8)
     upper_skin = np.array([20, 255, 255], dtype=np.uint8)
     mask = cv2.inRange(img_hsv, lower_skin, upper_skin)
@@ -37,7 +37,16 @@ def process_image(img):
     else:
         cropped = img_skin
 
-    resized = cv2.resize(cropped, (150, 150))
+    resized = cv2.resize(cropped, (150, 150)) """
+    resized = cv2.resize(img, (150, 150))
+
+    # Filename
+    filename = 'savedImage.jpg'
+
+    # Using cv2.imwrite() method
+    # Saving the image
+    cv2.imwrite(filename, resized)
+    
     return resized.astype(np.float32) / 255.0
 
 def predict_gesture(img):
