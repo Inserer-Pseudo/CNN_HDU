@@ -18,7 +18,11 @@ model = load_model("rock_paper_scissors_cnn.h5")
 classes = ['Pierre', 'Feuille', 'Ciseau']
 
 # Essai d'ouvrir la caméra
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(0,cv2.CAP_V4L)
+
+#Attendre 3s pour que la caméra démarre
+cv2.waitKey(3000)
+
 if not camera.isOpened():
     print("[WARN] La caméra n'est pas accessible.")
 
