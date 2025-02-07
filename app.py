@@ -14,7 +14,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Charger le modèle CNN entraîné pour reconnaître les gestes
-model = load_model("rock_paper_scissors_cnn.h5")
+model = load_model("rock_paper_scissors_cnn.keras")
 classes = ['Pierre', 'Feuille', 'Ciseau']
 
 # Essai d'ouvrir la caméra
@@ -47,6 +47,7 @@ def predict_gesture(img):
     """Prédit le geste basé sur l'image traitée."""
     img = np.expand_dims(img, axis=0)
     prediction = model.predict(img)
+    print(classes[np.argmax(prediction)])
     return classes[np.argmax(prediction)]
 
 def determine_winner(gesture1, gesture2):
